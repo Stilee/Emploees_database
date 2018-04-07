@@ -24,7 +24,6 @@ public  class SQLDatabaseConnection {
         }
     }
 
-
     public void getData(String query){
         //query ="select * from Employees";
         try {
@@ -39,8 +38,14 @@ public  class SQLDatabaseConnection {
         }
         catch (Exception e) {
         }
-
     }
+
+    public Object[][] dataToObj(){
+
+
+return null;
+    }
+
 
 
 }

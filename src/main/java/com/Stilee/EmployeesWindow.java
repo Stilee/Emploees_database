@@ -32,7 +32,7 @@ public class EmployeesWindow extends JFrame{
     JPanel addDelPanel = new JPanel();
 
 
-    JComboBox dboComboBox;
+    JComboBox departmentComboBox;
 
     JTextField nameField;
     JTextField lastNameField;
@@ -55,10 +55,11 @@ public class EmployeesWindow extends JFrame{
                };
         tableModel.setColumnIdentifiers(columnNames);
 
-
         database.connect();
-        database.getData("select * FROM Employees");
+        String query="select E.Name, E.LastName, D.Name as department from  Employees as E, Departments as D where E.Department=D.Code;";
+        database.getData(query);
 
+        //database.getData("select * FROM Employees");
 
         for(int i = 0; i<database.data.length;i++){
             tableModel.addRow(data[i]);
@@ -73,19 +74,6 @@ public class EmployeesWindow extends JFrame{
         table.getSelectionModel().addListSelectionListener(tableListener);
 
 
-
-
-        String[] dbo ={};
-        dboComboBox= new JComboBox(dbo);
-        dboComboBox.setPreferredSize(new Dimension(120, 20));
-
-
-        ComboBoxActionListener dboComboBoxListener = new ComboBoxActionListener();
-        dboComboBox.addActionListener(dboComboBoxListener);
-
-        JLabel dboSelectLabel = new JLabel("Select Database");
-        JButton dboSelectButton = new JButton("Load");
-
         JLabel nameLabel = new JLabel("Name");
         nameField = new JTextField("");
         nameField.setPreferredSize(new Dimension(120, 20));
@@ -99,10 +87,10 @@ public class EmployeesWindow extends JFrame{
         lastNamePanel.add(lastNameField);
 
         JLabel departmentLabel = new JLabel("Department");
-        departmentField = new JTextField("");
-        departmentField.setPreferredSize(new Dimension(120, 20));
+        departmentComboBox = new JComboBox(database.keyWithNames[1]);
+        departmentComboBox.setPreferredSize(new Dimension(120, 20));
         departmentPanel.add(departmentLabel);
-        departmentPanel.add(departmentField);
+        departmentPanel.add(departmentComboBox);
 
         editEmployee = new JButton("Edit");
         EditEmployeeListener editEmployeeListener = new EditEmployeeListener();
@@ -113,17 +101,14 @@ public class EmployeesWindow extends JFrame{
         AddEmployeeListener addEmployeeListener = new AddEmployeeListener();
         addEmployee.addActionListener(addEmployeeListener);
 
-
         deleteEmployee = new JButton("Delete Employee");
         DelEmployeeListener delEmployeeListener = new DelEmployeeListener();
         deleteEmployee.addActionListener(delEmployeeListener);
 
+
+
         mainBox.add(controlBox);
         mainBox.add(scrollPane);
-
-        loadDboPanel.add(dboSelectLabel);
-        loadDboPanel.add(dboComboBox);
-        loadDboPanel.add(dboSelectButton);
 
         addDelPanel.add(editEmployee);
         addDelPanel.add(addEmployee);
@@ -153,30 +138,49 @@ public class EmployeesWindow extends JFrame{
         @Override
         public void valueChanged(ListSelectionEvent e) {
             if (table.getSelectedRow() > -1) {
-                // print first column value from selected row
-           //     System.out.println(table.getValueAt(table.getSelectedRow(), 0).toString());
                 nameField.setText(table.getValueAt(table.getSelectedRow(), 0).toString());
                 lastNameField.setText(table.getValueAt(table.getSelectedRow(), 1).toString());
-                departmentField.setText(table.getValueAt(table.getSelectedRow(), 2).toString());
+
+                for(int i=0; i<database.keyWithNames[1].length; i++){
+                    if(table.getValueAt(table.getSelectedRow(),2).equals(database.keyWithNames[1][i])){
+                        departmentComboBox.setSelectedIndex(i);
+                    }
+                }
             }
 
         }
     }
 
     private class AddEmployeeListener implements  ActionListener{
+        //TODO:Make sure Fields !empty
         @Override
         public void actionPerformed(ActionEvent e) {
+            String department ="";
+            tableModel.addRow(new Object[]{nameField.getText(),lastNameField.getText(),departmentComboBox.getSelectedItem()});
 
+            for(int i=0; i<database.keyWithNames[1].length; i++){
+                if(departmentComboBox.getSelectedItem().equals(database.keyWithNames[1][i])){
+                    department=database.keyWithNames[0][i];
+                }
+            }
+            //TODO unique ID
+            String query ="Insert into employees values"
+                    +"("+(long)(Math.random()*1000000000)+","
+                    +"\'"+nameField.getText()+"\',"
+                    +"\'"+lastNameField.getText()+"\',"
+                    +department+")";
 
-            //database.getData("select * FROM Employees where Department = 14;");
-            tableModel.addRow(new Object[]{nameField.getText(),lastNameField.getText(),departmentField.getText()});
-          //  tableModel.fireTableDataChanged();
-            //table.repaint();
+            System.out.println(query);
+            //database.getData(query);
+            //COMMENTED TO AVOID CHANGING DATABASE
+
             System.out.println("Employee added");
         }
     }
 
     private class DelEmployeeListener implements  ActionListener{
+        //TODO:Make sure row is selected!
+        //TODO:Delete from SQL database
         @Override
         public void actionPerformed(ActionEvent e) {
             tableModel.removeRow(table.getSelectedRow());
@@ -185,9 +189,11 @@ public class EmployeesWindow extends JFrame{
     }
 
     private class EditEmployeeListener implements  ActionListener{
+        //TODO:Make sure row is selected!
+        //TODO: Edit in SQL database
         @Override
         public void actionPerformed(ActionEvent e) {
-            tableModel.insertRow(table.getSelectedRow()+1,new Object[]{nameField.getText(),lastNameField.getText(),departmentField.getText()});
+            tableModel.insertRow(table.getSelectedRow()+1,new Object[]{nameField.getText(),lastNameField.getText(),departmentComboBox.getSelectedItem()});
             tableModel.removeRow(table.getSelectedRow());
             System.out.println("Employee edited");
         }

@@ -1,11 +1,17 @@
 package com.Stilee;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
+
 import java.sql.*;
 
 
 public  class SQLDatabaseConnection {
 
     Connection conn;
+    Statement stmt;
+    ResultSet myRes;
+
+    String[][] keyWithNames;
     String userName = "sa";
     String password = "password";
     String database = "Employees_test";
@@ -20,9 +26,6 @@ public  class SQLDatabaseConnection {
         try {
             conn = DriverManager.getConnection(url, userName, password);
             System.out.println("Successfully connected to database:" + database);
-
-
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -32,23 +35,30 @@ public  class SQLDatabaseConnection {
         //query ="select * from Departments";
         try {
             //Make statement
-            Statement stmt = conn.createStatement();
-            ResultSet myRes = stmt.executeQuery(query);
+            stmt = conn.createStatement();
+            myRes = stmt.executeQuery(query);
+            makeQuery(query);
 
             //Process resultSet Objects
             while (myRes.next()) {
-               // System.out.println(myRes.getString("Name") + ", " + myRes.getString("Lastname"));
-                //System.out.println(myRes.getString("E.Name") + myRes.getString("E.LastName") + myRes.getString("Name"));
                 dataToObj(myRes.getString("Name"),myRes.getString("LastName"),myRes.getString("Department"));
-
             }
         }
         catch (Exception e) {
         }
+
+        getKeyName();
+
     }
 
 
-
+    public void makeQuery(String query){
+        try {
+            myRes = stmt.executeQuery(query);
+        }
+        catch (Exception e) {
+        }
+    }
 
 
 
@@ -66,7 +76,31 @@ public  class SQLDatabaseConnection {
         return data;
     }
 
+    private void getKeyName(){
+        int n=0;
+        makeQuery("select count(*) from departments");
+        try {
+            while (myRes.next()) {
+                keyWithNames = new String[2][myRes.getInt(1)];
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
+        makeQuery("select * from departments");
+
+        try {
+            while (myRes.next()) {
+                keyWithNames[0][n]=myRes.getString("Code");
+                keyWithNames[1][n]=myRes.getString("Name");
+                n++;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+    }
 
     public void getDatabaseMetaData()
     {
